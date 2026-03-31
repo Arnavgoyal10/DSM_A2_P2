@@ -1,0 +1,19 @@
+Quartile,Category,Mean_Stars,Mean_Review_Count,Tip_to_Review_Ratio
+Low (Bottom 25%),"Mexican, Restaurants",4.166666666666667,8.222222222222221,0.08108108108108109
+Low (Bottom 25%),"Restaurants, Italian",4.4,18.8,0.06382978723404255
+Low (Bottom 25%),"Restaurants, Mexican",4.0,6.666666666666667,0.0
+Low (Bottom 25%),"Restaurants, Pizza",3.0357142857142856,15.357142857142858,0.07906976744186046
+Medium (25-75%),"Mexican, Restaurants",3.685185185185185,34.81481481481482,0.08723404255319149
+Medium (25-75%),"Restaurants, Italian",3.7,25.6,0.125
+Medium (25-75%),"Restaurants, Mexican",3.6842105263157894,43.473684210526315,0.14164648910411623
+Medium (25-75%),"Restaurants, Pizza",3.1029411764705883,34.94117647058823,0.08754208754208755
+High (Top 25%),"Bars, Breakfast & Brunch, Restaurants, Barbeque, Cajun/Creole, Cafes, Cocktail Bars, Nightlife",4.0,2064.0,0.07170542635658915
+High (Top 25%),"Event Planning & Services, Casinos, Beauty & Spas, Venues & Event Spaces, Arts & Entertainment, Day Spas, Hotels, Hotels & Travel",4.0,2486.0,0.08849557522123894
+High (Top 25%),"German, Restaurants, Seafood, Cocktail Bars, French, Brasseries, American (New), Nightlife, Bars, Cajun/Creole, Breakfast & Brunch",4.0,4554.0,0.07795344751866491
+High (Top 25%),"Live/Raw Food, Restaurants, Seafood, Beer Bar, Beer, Wine & Spirits, Bars, Food, Nightlife",4.0,2404.0,0.06447587354409318
+High (Top 25%),"Mexican, Restaurants",3.9166666666666665,152.0,0.11348684210526316
+High (Top 25%),"Restaurants, Cocktail Bars, Bars, Comfort Food, American (New), Sandwiches, Nightlife, Breakfast & Brunch",4.5,2126.0,0.0936030103480715
+High (Top 25%),"Restaurants, Italian",3.5833333333333335,310.8333333333333,0.058981233243967826
+High (Top 25%),"Restaurants, Mexican",3.5588235294117645,104.88235294117646,0.11777902411665732
+High (Top 25%),"Restaurants, Pizza",4.0,155.5,0.1302250803858521
+High (Top 25%),"Vegetarian, Restaurants, Breakfast & Brunch, Cafes, Juice Bars & Smoothies, Sandwiches, Food",4.5,2084.0,0.10844529750479846

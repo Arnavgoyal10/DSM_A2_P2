@@ -1,0 +1,101 @@
+CommunityID,Size,Top3_States,Top3_Cats,Geo_Concentration,Total_Reviews
+120012,55788,"['AB', 'LA', 'PA']","['Restaurants', 'Food', 'Nightlife']",0.9404572036150983,5643
+1069663,331778,"['LA', 'TN', 'FL']","['Restaurants', 'Food', 'Nightlife']",0.8863136525122652,11822
+2404186,344317,"['IN', 'FL', 'TN']","['Restaurants', 'Food', 'Nightlife']",0.8682086658550882,22179
+1387825,307956,"['AZ', 'LA', 'TN']","['Restaurants', 'Food', 'Nightlife']",0.8105737910298171,11973
+936629,930091,"['FL', 'LA', 'PA']","['Restaurants', 'Food', 'Nightlife']",0.8049490913777548,38795
+1020359,478979,"['NV', 'LA', 'CA']","['Restaurants', 'Food', 'Nightlife']",0.785958904109589,20440
+4328117,507376,"['TN', 'LA', 'FL']","['Restaurants', 'Food', 'Nightlife']",0.74235807860262,15572
+72318,392716,"['MO', 'IL', 'FL']","['Restaurants', 'Food', 'Nightlife']",0.7270239604885537,14983
+2485464,1383044,"['PA', 'NJ', 'LA']","['Restaurants', 'Food', 'Nightlife']",0.7166323322129459,55338
+45527,508,"['PA', 'MO', 'DE']","['Restaurants', 'Sandwiches', 'Food']",0.6470588235294118,17
+1005896,7420,"['FL', 'PA', 'LA']","['Restaurants', 'Food', 'Nightlife']",0.6338983050847458,295
+101329,329,"['CA', 'NV', 'TN']","['Restaurants', 'Food', 'Pizza']",0.5454545454545454,11
+585422,4187,"['PA', 'FL', 'TN']","['Restaurants', 'Food', 'Nightlife']",0.5277777777777778,72
+186575,223110,"['ID', 'LA', 'FL']","['Restaurants', 'Food', 'Nightlife']",0.5270319303338171,5512
+1865248,1817,"['FL', 'LA', 'TN']","['Restaurants', 'Bars', 'Nightlife']",0.5151515151515151,33
+6708621,574,"['FL', 'TN', 'LA']","['Restaurants', 'American (Traditional)', 'Food']",0.5,20
+122521,8412,"['LA', 'CA', 'MO']","['Restaurants', 'Food', 'Nightlife']",0.4782608695652174,46
+48391,1033442,"['CA', 'LA', 'PA']","['Restaurants', 'Food', 'Nightlife']",0.4669172569996627,20751
+5287191,1185,"['AZ', 'LA', 'TN']","['Restaurants', 'American (Traditional)', 'Beauty & Spas']",0.45,20
+1084837,1334,"['PA', 'LA', 'FL']","['Restaurants', 'Food', 'Nightlife']",0.4489795918367347,49
+813529,527,"['FL', 'PA', 'LA']","['Restaurants', 'Food', 'American (Traditional)']",0.4444444444444444,18
+135546,307639,"['LA', 'TN', 'FL']","['Restaurants', 'Food', 'Nightlife']",0.43999218139171226,5116
+273746,603,"['PA', 'CA', 'LA']","['Restaurants', 'Food', 'Nightlife']",0.4375,32
+255989,272,"['LA', 'PA', 'TN']","['Restaurants', 'American (Traditional)', 'Bars']",0.42857142857142855,14
+2045789,19352,"['PA', 'LA', 'IN']","['Restaurants', 'Food', 'Indian']",0.41291585127201563,511
+186150,469,"['AZ', 'PA', 'CA']","['Restaurants', 'Bars', 'American (Traditional)']",0.38461538461538464,13
+2520691,561,"['LA', 'TN', 'MO']","['Restaurants', 'Food', 'Breakfast & Brunch']",0.38461538461538464,13
+1438653,268,"['FL', 'LA', 'IL']","['Restaurants', 'American (New)', 'Breakfast & Brunch']",0.375,8
+578800,29748,"['LA', 'CA', 'FL']","['Restaurants', 'Food', 'Nightlife']",0.36006825938566556,586
+4336863,593,"['FL', 'IL', 'ID']","['Restaurants', 'Nightlife', 'Bars']",0.36,25
+1094110,911,"['PA', 'LA', 'MO']","['Restaurants', 'Food', 'Breakfast & Brunch']",0.34146341463414637,41
+385150,2846,"['PA', 'FL', 'LA']","['Restaurants', 'Breakfast & Brunch', 'Nightlife']",0.34,50
+5948157,4131,"['FL', 'LA', 'PA']","['Restaurants', 'Nightlife', 'Bars']",0.3333333333333333,81
+6766657,461,"['NJ', 'FL', 'PA']","['Restaurants', 'Food', 'American (New)']",0.3333333333333333,27
+6993262,591,"['PA', 'LA', 'DE']","['Restaurants', 'Shopping', 'American (Traditional)']",0.3333333333333333,15
+3286860,299,"['FL', 'AZ', 'LA']","['Restaurants', 'Bars', 'Nightlife']",0.3333333333333333,3
+5167168,528,"['CA', 'TN', 'LA']","['Restaurants', 'Breakfast & Brunch', 'Bars']",0.3333333333333333,6
+2091560,1871,"['PA', 'FL', 'CA']","['Restaurants', 'Food', 'Nightlife']",0.3333333333333333,36
+1032293,2246,"['TN', 'FL', 'LA']","['Restaurants', 'Food', 'Bars']",0.325,40
+4897523,6814,"['FL', 'PA', 'TN']","['Restaurants', 'Food', 'Nightlife']",0.3231707317073171,164
+210738,2124,"['LA', 'FL', 'PA']","['Restaurants', 'Food', 'Bars']",0.3170731707317073,41
+19053,1622,"['FL', 'LA', 'CA']","['Restaurants', 'Nightlife', 'Bars']",0.3076923076923077,39
+6190487,55458,"['LA', 'TN', 'FL']","['Restaurants', 'Nightlife', 'Food']",0.3008298755186722,964
+5210608,567,"['TN', 'AB', 'MO']","['Restaurants', 'Food', 'American (New)']",0.3,10
+2490748,77776,"['PA', 'LA', 'FL']","['Restaurants', 'Food', 'Nightlife']",0.2972336668628605,1699
+1100495,1045,"['PA', 'FL', 'DE']","['Restaurants', 'Food', 'Event Planning & Services']",0.29411764705882354,17
+3226588,2122,"['PA', 'TN', 'FL']","['Restaurants', 'Nightlife', 'Bars']",0.2916666666666667,48
+1167072,80395,"['LA', 'PA', 'FL']","['Restaurants', 'Nightlife', 'Food']",0.2892249527410208,1587
+4804914,711,"['FL', 'AZ', 'NV']","['Restaurants', 'Food', 'Bars']",0.2857142857142857,28
+2631284,3476,"['FL', 'CA', 'PA']","['Restaurants', 'Nightlife', 'Bars']",0.28421052631578947,95
+790602,7174,"['PA', 'FL', 'LA']","['Restaurants', 'Food', 'Nightlife']",0.28,175
+129924,12696,"['LA', 'FL', 'AZ']","['Restaurants', 'Food', 'Nightlife']",0.2773972602739726,292
+270134,20187,"['FL', 'PA', 'LA']","['Restaurants', 'Nightlife', 'Food']",0.2766393442622951,488
+116768,973647,"['PA', 'LA', 'FL']","['Restaurants', 'Food', 'Nightlife']",0.2747100781212092,82436
+237983,366,"['LA', 'PA', 'MO']","['Restaurants', 'Food', 'Seafood']",0.2727272727272727,11
+122125,29192,"['FL', 'PA', 'LA']","['Restaurants', 'Nightlife', 'Food']",0.27137546468401486,538
+2907370,16567,"['FL', 'LA', 'TN']","['Restaurants', 'Food', 'Nightlife']",0.2692307692307692,260
+672873,5050,"['PA', 'FL', 'LA']","['Restaurants', 'Food', 'Nightlife']",0.2670807453416149,161
+5573514,87933,"['FL', 'LA', 'PA']","['Restaurants', 'Food', 'Nightlife']",0.2650753768844221,1592
+1665125,1187,"['LA', 'PA', 'FL']","['Restaurants', 'Nightlife', 'Bars']",0.2647058823529412,34
+128856,1005,"['LA', 'AZ', 'FL']","['Restaurants', 'Food', 'Nightlife']",0.2647058823529412,34
+2223088,18120,"['FL', 'LA', 'PA']","['Restaurants', 'Food', 'Nightlife']",0.26278659611992944,567
+19169,83449,"['FL', 'LA', 'TN']","['Restaurants', 'Food', 'Nightlife']",0.26191950464396285,1615
+397419,60060,"['PA', 'LA', 'CA']","['Restaurants', 'Food', 'Nightlife']",0.2579403272377286,2078
+2637684,6034,"['PA', 'FL', 'TN']","['Restaurants', 'Food', 'Nightlife']",0.2541436464088398,181
+2104651,33743,"['CA', 'LA', 'NV']","['Restaurants', 'Food', 'Nightlife']",0.25358166189111747,698
+5708284,1019,"['CA', 'PA', 'LA']","['Restaurants', 'Food', 'Nightlife']",0.25,24
+2344284,4490,"['LA', 'PA', 'FL']","['Restaurants', 'Food', 'Bars']",0.24806201550387597,129
+116585,5068,"['PA', 'LA', 'CA']","['Restaurants', 'Bars', 'Nightlife']",0.24691358024691357,81
+8154128,2623,"['FL', 'TN', 'LA']","['Restaurants', 'Bars', 'Nightlife']",0.2465753424657534,73
+4232066,64515,"['LA', 'FL', 'TN']","['Restaurants', 'Food', 'Nightlife']",0.24514338575393155,1081
+6801520,9548,"['FL', 'LA', 'TN']","['Restaurants', 'Food', 'Nightlife']",0.2436548223350254,197
+72261,5990,"['FL', 'LA', 'PA']","['Restaurants', 'Food', 'Nightlife']",0.23983739837398374,246
+1189274,8699,"['FL', 'LA', 'PA']","['Restaurants', 'Food', 'Nightlife']",0.23756906077348067,181
+8064357,173432,"['LA', 'FL', 'TN']","['Restaurants', 'Food', 'Nightlife']",0.23716251985177342,3778
+1293719,13255,"['LA', 'PA', 'FL']","['Restaurants', 'Food', 'Nightlife']",0.2345415778251599,469
+2905775,20323,"['FL', 'LA', 'TN']","['Restaurants', 'Food', 'Nightlife']",0.23391812865497075,342
+19513,187293,"['FL', 'TN', 'LA']","['Restaurants', 'Food', 'Nightlife']",0.23096576392437404,3914
+4236065,51897,"['LA', 'FL', 'TN']","['Restaurants', 'Food', 'Nightlife']",0.22112211221122113,909
+6552278,1355,"['FL', 'LA', 'PA']","['Restaurants', 'Nightlife', 'Food']",0.21739130434782608,46
+278664,3981,"['LA', 'CA', 'PA']","['Restaurants', 'Bars', 'Nightlife']",0.21428571428571427,70
+4189450,7036,"['FL', 'PA', 'LA']","['Restaurants', 'Food', 'Nightlife']",0.2111111111111111,180
+1010516,28565,"['LA', 'FL', 'TN']","['Restaurants', 'Food', 'Nightlife']",0.21074380165289255,484
+736063,24473,"['FL', 'TN', 'LA']","['Restaurants', 'Food', 'Nightlife']",0.21060842433697347,641
+117709,11628,"['FL', 'LA', 'TN']","['Restaurants', 'Food', 'Nightlife']",0.2054263565891473,258
+3691177,2201,"['FL', 'LA', 'MO']","['Restaurants', 'Food', 'American (New)']",0.20408163265306123,49
+1534008,10379,"['TN', 'FL', 'LA']","['Restaurants', 'Food', 'Nightlife']",0.20081967213114754,244
+1416501,44054,"['LA', 'FL', 'PA']","['Restaurants', 'Food', 'Nightlife']",0.20066889632107024,897
+71485,252,"['IL', 'TN', 'AZ']","['Restaurants', 'Nightlife', 'Breakfast & Brunch']",0.2,15
+2068496,3874,"['AZ', 'PA', 'FL']","['Restaurants', 'Food', 'Breakfast & Brunch']",0.19834710743801653,121
+3451058,64373,"['LA', 'CA', 'FL']","['Restaurants', 'Food', 'Nightlife']",0.19225806451612903,1550
+4287547,3737,"['FL', 'TN', 'LA']","['Restaurants', 'Food', 'Nightlife']",0.1919191919191919,99
+3125254,1502,"['LA', 'IN', 'ID']","['Restaurants', 'American (New)', 'Beauty & Spas']",0.19047619047619047,21
+1756614,423,"['LA', 'FL', 'PA']","['Restaurants', 'Event Planning & Services', 'Food']",0.19047619047619047,21
+3136714,5978,"['PA', 'FL', 'NV']","['Restaurants', 'Food', 'Nightlife']",0.1865671641791045,134
+1973034,5936,"['LA', 'NV', 'IN']","['Restaurants', 'Food', 'Bars']",0.18253968253968253,126
+160341,6533,"['LA', 'FL', 'NV']","['Restaurants', 'Food', 'Nightlife']",0.18090452261306533,199
+3491656,1539,"['FL', 'LA', 'TN']","['Restaurants', 'Nightlife', 'Seafood']",0.17857142857142858,28
+2035246,657,"['LA', 'TN', 'FL']","['Restaurants', 'Bars', 'Nightlife']",0.17391304347826086,23
+414027,8608,"['TN', 'LA', 'IN']","['Restaurants', 'Food', 'Nightlife']",0.17391304347826086,207

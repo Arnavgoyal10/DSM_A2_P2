@@ -1,0 +1,93 @@
+// NEO4J PART 2: UI/BROWSER EXECUTION QUERIES
+
+// -----------------------------------------------------------------------------------------
+// GDS QUERY 1: PageRank on User->Business Bipartite 
+// -----------------------------------------------------------------------------------------
+// Step 1: Project mathematical graph to RAM
+CALL gds.graph.project.cypher(
+  'pagerankGraphUI',
+  'MATCH (n) WHERE n:User OR n:Business RETURN id(n) AS id, labels(n) AS labels',
+  'MATCH (u:User)-[:WROTE]->(r:Review)-[:ABOUT]->(b:Business) RETURN id(u) AS source, id(b) AS target, r.stars AS weight'
+) YIELD graphName, nodeCount, relationshipCount;
+
+// Step 2: Stream PageRank topologically natively
+CALL gds.pageRank.stream('pagerankGraphUI', {
+   maxIterations: 20,
+   relationshipWeightProperty: 'weight'
+})
+YIELD nodeId, score
+WITH gds.util.asNode(nodeId) AS b, score
+WHERE 'Business' IN labels(b)
+RETURN b.name AS BusinessName, b.stars AS AvgStarRating, b.review_count AS ReviewCount, score AS PageRank
+ORDER BY PageRank DESC LIMIT 15;
+
+// Step 3: Clear Graph from RAM
+CALL gds.graph.drop('pagerankGraphUI', false) YIELD graphName;
+
+
+// -----------------------------------------------------------------------------------------
+// GDS QUERY 2: Louvain Community Detection Network
+// -----------------------------------------------------------------------------------------
+// Step 1: Project undirected Social Graph natively
+CALL gds.graph.project('friendsGraphUI', 'User', {FRIENDS_WITH: {orientation: 'UNDIRECTED'}});
+
+// Step 2: Calculate Communities natively and write them back natively to DB
+CALL gds.louvain.write('friendsGraphUI', {writeProperty: 'communityId'})
+YIELD communityCount, modularity;
+
+// Step 3: Native fraction investigation mapping back Top Cities automatically per community. 
+// (Replace `7565934` with any communityId to investigate literal arrays)
+MATCH (u:User {communityId: 7565934})-[:WROTE]->(r:Review)-[:ABOUT]->(b:Business)
+WITH b, count(r) AS review_count
+MATCH (b)-[:IN_CATEGORY]->(c:Category)
+RETURN b.state AS state, c.name AS category, review_count
+ORDER BY review_count DESC LIMIT 20;
+
+// Step 4: Clear Graph from RAM
+CALL gds.graph.drop('friendsGraphUI', false) YIELD graphName;
+
+
+// -----------------------------------------------------------------------------------------
+// GDS QUERY 3: Node Similarity (Jaccard Intersection inside localized Metro)
+// -----------------------------------------------------------------------------------------
+// Since Jaccard calculates over the total permutation network, the Python code explicitly boundaries it internally.
+// To run manually for a specific combination (e.g. Philadelphia Pizzas), run this directly in the literal console block:
+MATCH (b1:Business {city: 'Philadelphia'})-[:IN_CATEGORY]->(:Category {name: 'Pizza'})
+OPTIONAL MATCH (b1)<-[:ABOUT]-(:Review)<-[:WROTE]-(u:User)
+WITH b1, collect(DISTINCT id(u)) AS audience1
+WHERE size(audience1) > 0
+
+MATCH (b2:Business {city: 'Philadelphia'})-[:IN_CATEGORY]->(:Category {name: 'Pizza'})
+WHERE id(b1) < id(b2)
+OPTIONAL MATCH (b2)<-[:ABOUT]-(:Review)<-[:WROTE]-(u2:User)
+WITH b1, audience1, b2, collect(DISTINCT id(u2)) AS audience2
+WHERE size(audience2) > 0
+
+WITH b1, b2, size(apoc.coll.intersection(audience1, audience2)) AS common_users, audience1, audience2
+WHERE common_users >= 5 
+WITH tofloat(common_users) / size(apoc.coll.union(audience1, audience2)) AS jaccard_score,
+     b1.stars AS b1_stars, b2.stars AS b2_stars, b1.review_count AS b1_rev, b2.review_count AS b2_rev
+RETURN jaccard_score, b1_stars, b2_stars, b1_rev, b2_rev ORDER BY jaccard_score DESC LIMIT 10;
+
+
+// -----------------------------------------------------------------------------------------
+// GDS QUERY 4: Betweenness vs Degree Centrality (Mathematical Bridges)
+// -----------------------------------------------------------------------------------------
+// Step 1: Project Isolated Elite Topology (Reduces heavy JVM memory allocation failures locally)
+CALL gds.graph.project.cypher(
+  'betweennessGraphUI',
+  'MATCH (u:User)-[w:WROTE]->(:Review) WITH u, count(w) AS rc WHERE rc >= 5 RETURN id(u) AS id',
+  'MATCH (u1:User)-[:FRIENDS_WITH]-(u2:User) RETURN id(u1) AS source, id(u2) AS target',
+  {validateRelationships: false}
+);
+
+// Step 2: Stream algebra against native mathematical friends Degree natively
+CALL gds.betweenness.stream('betweennessGraphUI')
+YIELD nodeId, score
+WITH gds.util.asNode(nodeId) AS user, score AS betweenness_score
+WITH id(user) AS uid, betweenness_score, COUNT { (user)-[:FRIENDS_WITH]-() } AS degree
+RETURN uid, betweenness_score, degree
+ORDER BY betweenness_score DESC LIMIT 20;
+
+// Step 3: Clear Graph from RAM!
+CALL gds.graph.drop('betweennessGraphUI', false) YIELD graphName;

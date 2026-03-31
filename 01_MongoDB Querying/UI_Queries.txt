@@ -1,0 +1,76 @@
+// MONGODB PART 2: UI/SHELL EXECUTION QUERIES
+
+// -----------------------------------------------------------------------------------------
+// QUERY 1: Cohort Analysis (Calculating Years & Star Proportions algebraically)
+// -----------------------------------------------------------------------------------------
+db.review.aggregate([
+    // 1. Join review to its specific author mapping
+    { $lookup: { 
+        from: "user", 
+        localField: "user_id", 
+        foreignField: "user_id", 
+        as: "u" } 
+    },
+    { $unwind: "$u" },
+    // 2. Compute date parsing natively and mathematical lengths
+    { $addFields: {
+        user_date: { $dateFromString: { dateString: "$u.yelping_since" } },
+        char_length: { $strLenCP: "$text" },
+        useful_votes: { $ifNull: ["$useful", 0] }
+    }},
+    { $addFields: {
+        cohort_year: { $year: "$user_date" }
+    }},
+    // 3. Binary isolation to extract 1-5 star distributions mathematically
+    { $addFields: {
+        is_1: { $cond: [{ $eq: ["$stars", 1] }, 1, 0] },
+        is_2: { $cond: [{ $eq: ["$stars", 2] }, 1, 0] },
+        is_3: { $cond: [{ $eq: ["$stars", 3] }, 1, 0] },
+        is_4: { $cond: [{ $eq: ["$stars", 4] }, 1, 0] },
+        is_5: { $cond: [{ $eq: ["$stars", 5] }, 1, 0] }
+    }},
+    // 4. Final Aggregation bounds combining native math standard-deviations
+    { $group: {
+        _id: "$cohort_year",
+        total_reviews: { $sum: 1 },
+        mean_stars: { $avg: "$stars" },
+        std_stars: { $stdDevPop: "$stars" },
+        mean_char_length: { $avg: "$char_length" },
+        mean_useful_votes: { $avg: "$useful_votes" },
+        sum_1: { $sum: "$is_1" },
+        sum_2: { $sum: "$is_2" },
+        sum_3: { $sum: "$is_3" },
+        sum_4: { $sum: "$is_4" },
+        sum_5: { $sum: "$is_5" }
+    }},
+    { $sort: { _id: 1 } }
+], { allowDiskUse: true, maxTimeMS: 120000 });
+
+
+// -----------------------------------------------------------------------------------------
+// QUERY 2: Month-over-Month Baseline Matrix (Parsed in Pandas locally originally)
+// -----------------------------------------------------------------------------------------
+db.review.aggregate([
+    { $lookup: { 
+        from: "business", 
+        localField: "business_id", 
+        foreignField: "business_id", 
+        as: "b" } 
+    },
+    { $unwind: "$b" },
+    { $unwind: "$b.categories" },
+    // Reconstruct native strings to identical parsed YYYY-MM structure
+    { $addFields: {
+        parsed_date: { $dateFromString: { dateString: "$date" } }
+    }},
+    { $addFields: {
+        year_month: { $dateToString: { format: "%Y-%m", date: "$parsed_date" } }
+    }},
+    // Group identically across local matrix bounds
+    { $group: {
+        _id: { category: "$b.categories", month: "$year_month" },
+        monthly_reviews: { $sum: 1 },
+        monthly_avg_stars: { $avg: "$stars" }
+    }}
+], { allowDiskUse: true, maxTimeMS: 120000 });
+
