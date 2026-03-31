@@ -18,7 +18,8 @@ Over the course of implementing the massive analytical pipelines required for Pa
 ## 3. MongoDB Advanced Querying
 
 ### Query 1: Cohort Analysis
-We structurally grouped reviewers based on the `yelping_since` timestamp, calculating native string arrays and numeric aggregates mathematically.
+We structurally grouped reviewers based on the `yelping_since` timestamp, calculating native string arrays and numeric aggregates mathematically. The pipeline joins the `review` and `user` collections on `user_id`, parses the `yelping_since` field to extract the cohort year, computes per-star indicator flags, and aggregates across cohort year.
+
 **MongoDB Pipeline Execution:**
 ```json
 [
@@ -42,7 +43,7 @@ We structurally grouped reviewers based on the `yelping_since` timestamp, calcul
       "std_stars": {"$stdDevPop": "$stars"},
       "mean_char_length": {"$avg": "$char_length"},
       "mean_useful_votes": {"$avg": "$useful_votes"},
-      "sum_1": {"$sum": "$is_1"}, "sum_2": {"$sum": "$is_2"}, 
+      "sum_1": {"$sum": "$is_1"}, "sum_2": {"$sum": "$is_2"},
       "sum_3": {"$sum": "$is_3"}, "sum_4": {"$sum": "$is_4"}, "sum_5": {"$sum": "$is_5"}
   }},
   {"$sort": {"_id": 1}}
@@ -50,15 +51,25 @@ We structurally grouped reviewers based on the `yelping_since` timestamp, calcul
 ```
 
 **Interpretation:**
-Users who joined during Yelp's early inception (2004-2005) consistently produced the longest reviews (average 647+ characters) and possessed the highest mean useful votes. The **2005 cohort mathematically generated the highest theoretical volume of usefulness** (2.22 mean useful votes), signaling that platform early-adopters remain its most critical analytical reviewers. The **2004 cohort interestingly produced the highest mean star rating** (4.09 stars vs a global average of ~3.80). 
-Regarding variance, earlier cohorts like 2005 had much narrower deviations (`std: 1.02`) than newer accounts like 2022 (`std: 1.85`).
-Proportionally, star distributions vary by cohort. For example, the 2005 Cohort breakdown was: `1-star: 2.6%`, `2-star: 6.8%`, `3-star: 19.0%`, `4-star: 37.1%`, `5-star: 34.2%`. In contrast, the 2022 dataset is aggressively polarized (`1-star: 45.4%`, `5-star: 38.2%`).
+Users who joined during Yelp's early inception (2005–2008) consistently produced the longest reviews and highest mean useful votes. The **2005 cohort generated the highest mean useful votes per review (2.23)**, signaling that platform early-adopters remain its most analytically critical contributors. The **2004 cohort produced the highest mean star rating (4.09 stars)** — though this cohort contains only 11 reviews and should be interpreted cautiously due to its small sample size. The most statistically reliable early cohort, 2005 (566 reviews), yields a mean star rating of 3.93 and a mean review length of 647 characters, compared to 2022 joiners (209 reviews) who average only 468 characters per review and a mean star rating of 2.88.
+
+Rating variance increases monotonically with cohort recency: the 2005 cohort has a population std_stars of 1.02, the 2015 cohort 1.53, and the 2022 cohort 1.86. This indicates that newer users polarise their ratings far more aggressively than established reviewers.
+
+Proportional star distributions also show cohort-level polarisation:
+- **2005 cohort**: 1-star 2.65%, 2-star 6.89%, 3-star 19.08%, 4-star 37.10%, 5-star 34.28%
+- **2022 cohort**: 1-star 45.45%, 2-star 4.78%, 3-star 4.78%, 4-star 6.70%, 5-star 38.28%
+
+The 2022 cohort is sharply U-shaped — nearly half of reviews are 1-star and ~38% are 5-star, with almost no middle-ground ratings. This bimodal distribution suggests that very recent Yelp joiners are primarily motivated by extreme experiences (highly positive or deeply negative) rather than nuanced commentary.
+
+**Summary: Highest mean useful votes — 2005 cohort (2.23). Highest mean star rating — 2004 cohort (4.09, n=11; statistically limited).**
+
 **Visualization:**
 ![Q1 Cohorts](../01_MongoDB%20Querying/output/q1_cohorts_useful.png)
 
 
 ### Query 2: Month-over-Month Change
-Tracking consecutive positive array bounds temporally.
+For each business category with at least 500 total reviews, we computed the month-over-month (MoM) change in average star rating across the full temporal range of the dataset. Trend consistency is defined as the proportion of consecutive month-pairs showing an increase (upward) or decrease (downward) in average rating. The MongoDB pipeline groups reviews by `{category, year-month}` and computes monthly average stars; the differential calculation is performed in Python using `df.diff()`.
+
 **MongoDB Pipeline Execution:**
 ```json
 [
@@ -74,24 +85,27 @@ Tracking consecutive positive array bounds temporally.
   }}
 ]
 ```
-*(A Pandas dataframe `.diff()` differential sequence natively bounded proportions).*
+*(A Pandas dataframe `.diff()` differential sequence bounded consecutive proportions.)*
 
 **Interpretation:**
-- **Top 3 Consistent Upward Trends:** 
-  1. "Southern, Breakfast & Brunch, Restaurants": 56.4% consistency.
-  2. "Restaurants, American (New), Burgers, Breakfast & Brunch, Sandwiches": 54.3% consistency.
-  3. "American (New), Restaurants, American (Traditional), Food, Breakfast & Brunch, Coffee & Tea, Pizza": 54.0% consistency.
-- **Top 3 Consistent Downward Trends:** 
-  1. "Cocktail Bars, Soul Food, Nightlife, Food, Desserts, Bars, Seafood, Cajun/Creole, Restaurants": 58.1% consistency.
-  2. "Bars, Breakfast & Brunch, Restaurants, Barbeque, Cajun/Creole, Cafes, Cocktail Bars, Nightlife": 52.1% consistency.
-  3. "Restaurants, Italian": 53.2% consistency.
-Insight: Traditional/legacy dining properties and highly volatile nightlife venues suffer the most consistent downward pressure as they fail to adapt to evolving modern review expectations, while niche breakfast/specialty establishments maintain significantly higher satisfaction growth.
+- **Top 3 Consistent Upward Trends:**
+  1. "Southern, Breakfast & Brunch, Restaurants": 56.36% of consecutive month-pairs showed an increase.
+  2. "Restaurants, American (New), Burgers, Breakfast & Brunch, Sandwiches": 54.35% increasing pairs.
+  3. "American (New), Restaurants, American (Traditional), Food, Breakfast & Brunch, Coffee & Tea, Pizza": 54.00% increasing pairs.
+- **Top 3 Consistent Downward Trends:**
+  1. "Cocktail Bars, Soul Food, Nightlife, Food, Desserts, Bars, Seafood, Cajun/Creole, Restaurants": 58.06% of consecutive month-pairs showed a decrease.
+  2. "American (New), Cocktail Bars, Seafood, Bars, Restaurants, Nightlife": 55.22% decreasing pairs.
+  3. "American (Traditional), Breakfast & Brunch, Cafes, Restaurants": 54.55% decreasing pairs.
+
+**Insight:** Southern and breakfast-oriented categories show the most consistent upward satisfaction trends, likely driven by their niche appeal, loyal local followings, and relative immunity to commoditisation. Conversely, nightlife-heavy multi-category establishments combining cocktail bars with casual dining show the steepest downward pressure. These venues must simultaneously satisfy diners and nightlife customers — a harder bar to clear consistently. The decline in Cajun/Creole and soul food blended with nightlife suggests that quality consistency is difficult to maintain across multiple operational modes in a single venue.
+
 **Visualization:**
 ![Q2 MoM Trends](../01_MongoDB%20Querying/output/q2_mom_trends.png)
 
 
 ### Query 3: Check-in Quartiles
-Grouping the extracted massive array sequences against `business_id` into distinct Bins (Low 25%, Medium 25-75%, High 25%).
+Businesses were classified into three groups by total check-in count: top quartile (High, >75th percentile), middle two quartiles (Medium, 25th–75th), and bottom quartile (Low, <25th). Due to the heavily zero-inflated distribution of check-ins (many businesses have zero recorded check-ins), we used rank-based percentiles (`rank(pct=True)`) to avoid duplicate bin-edge errors. For each check-in frequency class and each of the top 10 business categories by total review count, we computed mean star rating, mean review count, and the ratio of total tips to total reviews.
+
 **MongoDB Base Statistics Extractions (Joined natively):**
 ```json
 [
@@ -104,17 +118,20 @@ Grouping the extracted massive array sequences against `business_id` into distin
 ]
 ```
 
-**Interpretation:**
-Cross-tabulating Check-in classes (`Low`, `Medium`, `High`) natively proved a crucial business parameter: High-volume physical store presence (Top 25% Check-ins) reliably correlated mathematically directly with higher Tip-to-Review ratios. 
+**Cross-Tabulation Results:**
 
-| Quartile | Category | Mean Stars | Mean Reviews | Tip/Review Ratio |
+| Quartile | Category | Mean Stars | Mean Review Count | Tip/Review Ratio |
 |---|---|---|---|---|
-| High | Pizza | 4.00 | 155.5 | 0.130 |
-| High | Mexican | 3.92 | 152.0 | 0.113 |
-| Medium | Italian | 3.70 | 25.6 | 0.125 |
-| Low | Italian | 4.40 | 18.8 | 0.064 |
+| High (Top 25%) | Restaurants, Pizza | 4.00 | 155.5 | 0.130 |
+| High (Top 25%) | Mexican, Restaurants | 3.92 | 152.0 | 0.113 |
+| High (Top 25%) | Restaurants, Mexican | 3.56 | 104.9 | 0.118 |
+| Medium (25-75%) | Restaurants, Italian | 3.70 | 25.6 | 0.125 |
+| Medium (25-75%) | Mexican, Restaurants | 3.69 | 34.8 | 0.087 |
+| Low (Bottom 25%) | Restaurants, Italian | 4.40 | 18.8 | 0.064 |
+| Low (Bottom 25%) | Mexican, Restaurants | 4.17 | 8.2 | 0.081 |
 
-Analysis: "High" traffic businesses (Top 25%) maintain a significantly higher Tip-to-Review ratio (~0.11-0.13) compared to "Low" traffic businesses (~0.06-0.08). This implies that physical volume guarantees micro-interaction metrics (Tips) independent of standard long-form text (Reviews), as high foot traffic encourages quick, mobile-first social signals over detailed commentary.
+**Insight:** High check-in businesses consistently generate the highest Tip-to-Review ratios (~0.11–0.13 for High vs ~0.06–0.08 for Low). This suggests that physical foot traffic drives quick, mobile-first social signals (tips) at a proportionally higher rate than long-form written reviews. Notably, low check-in Italian restaurants have the highest mean star rating (4.40), indicating that lower-traffic venues in this category may be boutique or specialist establishments with highly satisfied loyal patrons, whereas high-traffic Pizza venues score 4.00 on average — high volume does not always translate to higher quality perception.
+
 **Visualization:**
 ![Q3 Heatmap](../01_MongoDB%20Querying/output/q3_checkin_crosstab.png)
 
@@ -122,6 +139,8 @@ Analysis: "High" traffic businesses (Top 25%) maintain a significantly higher Ti
 ## 4. Neo4j Graph Data Science (GDS) Analytics
 
 ### GDS 1: PageRank on User->Business Bipartite
+We projected a directed, weighted graph from User and Business nodes, where each user-to-business edge carries the review's star rating as the weight. PageRank was run with a minimum of 20 iterations. The Spearman rank correlation between PageRank ranking and both review-count ranking and average-star-rating ranking was computed to identify what PageRank actually measures.
+
 **Cypher Projection & Execution:**
 ```cypher
 CALL gds.graph.project.cypher(
@@ -135,165 +154,253 @@ YIELD nodeId, score
 WITH gds.util.asNode(nodeId) AS b, score
 WHERE 'Business' IN labels(b)
 RETURN b.name AS BusinessName, b.stars AS AvgStarRating, b.review_count AS ReviewCount, score AS PageRank
+ORDER BY PageRank DESC
 ```
-
-**Interpretation:**
-PageRank strictly correlated with absolute `ReviewCount` (Spearman Correlation: **0.9561**) but yielded nearly zero correlation dynamically with `AvgStarRating` (**0.0228**). 
 
 **Top 15 Businesses by PageRank:**
 1. Luke (Score: 461.44) | 4554 Reviews | 4.0 Stars
 2. Peppermill Reno (Score: 274.33) | 2486 Reviews | 4.0 Stars
-3. Santa Barbara Shellfish Company (Score: 268.70) | 2404 Reviews | 4.0 Stars
-4. Mr. B's Bistro (Score: 208.50) | 2064 Reviews | 4.0 Stars
+3. Santa Barbara Shellfish Company (Score: 268.71) | 2404 Reviews | 4.0 Stars
+4. Mr. B's Bistro (Score: 208.51) | 2064 Reviews | 4.0 Stars
 5. Prep & Pastry (Score: 204.10) | 2126 Reviews | 4.5 Stars
-6. Surrey's Café & Juice Bar (Score: 197.97) | 2084 Reviews | 4.5 Stars
+6. Surrey's Café & Juice Bar (Score: 197.98) | 2084 Reviews | 4.5 Stars
 7. Cafe Fleur De Lis (Score: 196.24) | 1865 Reviews | 4.0 Stars
 8. The Pancake Pantry (Score: 191.75) | 2063 Reviews | 4.0 Stars
 9. District Donuts Sliders Brew (Score: 184.62) | 2062 Reviews | 4.5 Stars
 10. Milk and Honey Nashville (Score: 176.05) | 1725 Reviews | 4.0 Stars
-11. Creole House Oyster Bar (Score: 176.04) | 1594 Reviews | 4.0 Stars
-12. Gaylord Opryland Resort (Score: 169.89) | 1639 Reviews | 3.0 Stars
+11. Creole House Restaurant & Oyster Bar (Score: 176.05) | 1594 Reviews | 4.0 Stars
+12. Gaylord Opryland Resort & Convention Center (Score: 169.90) | 1639 Reviews | 3.0 Stars
 13. Mambo's (Score: 136.21) | 1223 Reviews | 4.0 Stars
-14. Mazzaro's Italian Market (Score: 130.90) | 1551 Reviews | 4.5 Stars
-15. Hellas Restaurant (Score: 123.27) | 1368 Reviews | 4.5 Stars
+14. Mazzaro's Italian Market (Score: 130.91) | 1551 Reviews | 4.5 Stars
+15. Hellas Restaurant (Score: 123.28) | 1368 Reviews | 4.5 Stars
 
-Anomalies: "Gaylord Opryland Resort" ranks #12 despite a mediocre 3.0-star rating. This confirms that PageRank identifies "structural nodes" — hubs with massive incoming traffic and cross-citations from varied user communities — proving topological influence is a proxy for market visibility rather than establishment qualitative excellence. 
+**Spearman Correlations:**
+- PageRank vs ReviewCount: **0.9562** (very strong)
+- PageRank vs AvgStarRating: **0.0350** (negligible)
+
+**Interpretation:**
+PageRank is almost perfectly correlated with raw review count (0.9562) but has near-zero correlation with average star rating (0.0350). This means PageRank, in this bipartite user-to-business projection, is essentially a weighted degree centrality — businesses with more reviewers linking to them rank higher regardless of quality.
+
+**Anomaly Analysis:** "Gaylord Opryland Resort & Convention Center" ranks #12 with only a 3.0-star average rating — the lowest in the top 15. Under a simple review-count ranking it would still appear near this position, but the discrepancy between its PageRank score (169.90) and mediocre quality highlights PageRank's inability to penalise low-quality establishments. Conversely, Prep & Pastry (4.5 stars, #5 by PageRank) ranks slightly *higher* under PageRank than under pure review count, suggesting it receives disproportionate engagement from highly active reviewers — a structural signal that a naive review-count metric misses.
+
 **Visualization:**
 ![GDS 1 Scatter](../02_Neo4j%20Queries/output/gds_q1_pagerank_scatter.png)
 
 
 ### GDS 2: Louvain Community Detection
+We projected the `FRIENDS_WITH` social graph as an undirected User–User graph and ran the Louvain modularity-maximisation algorithm. The resulting community IDs were written back as a node property for downstream use in the predictive modelling stage. For each community with at least 25 members, we computed size, top-3 states by review volume, top-3 business categories reviewed, and the geographic concentration index (fraction of all reviews by community members directed at the single most-reviewed state).
+
 **Cypher Graph Algorithm:**
 ```cypher
 CALL gds.graph.project('friendsGraph', 'User', {FRIENDS_WITH: {orientation: 'UNDIRECTED'}})
 CALL gds.louvain.write('friendsGraph', {writeProperty: 'communityId'})
+YIELD communityCount, modularity
 ```
 
-**Interpretation:**
-Bounding communities over 25 members revealed 120,816 distinct social groups with a high explicit modularity string value (`0.6834`). Analyzing geographic concentration natively verified that massive macro-communities were heavily saturated logically to singular local physical borders:
-- **Most Geographically Concentrated:** Community `120012` (Size: 55,788) mathematically dominated the network with an incredibly dense **`0.940`** concentration index mapped almost entirely to `AB, LA, PA`. Community `7565934` (Size: 2,784) achieved a strong secondary **`0.669`** concentration index mapped strictly to `NV, CA, FL`.
-- **Least Geographically Concentrated:** Community `414027` (Size: 8,608) functioned heavily cross-borders spanning `TN, LA, IN` possessing only a **`0.173`** explicit saturation, denoting hyper-traveling elite diner associations!
+**Results:**
+Louvain returned **120,816 distinct communities** with a modularity of **0.6834**, indicating strong community structure in the social graph. Analysing the 100 largest communities (>= 25 members):
+
+- **Most Geographically Concentrated:** Community `120012` (Size: 55,788 members) achieved a geographic concentration index of **0.940**, with reviews directed almost entirely at businesses in `AB` (Alberta), `LA` (Louisiana), and `PA` (Pennsylvania). This extremely high concentration suggests the community's members are geographically co-located or part of a tightly bonded local network.
+- **Second Most Concentrated:** Community `1069663` (Size: 331,778 members) had a concentration index of **0.886**, with reviews concentrated in `LA`, `TN`, and `FL`. This is the largest community by membership in the top 100, suggesting that large social communities can still be geographically anchored when they share a regional cultural identity (e.g., the South).
+- **Third Most Concentrated:** Community `2404186` (Size: 344,317 members) had concentration index **0.868**, centred on `IN`, `FL`, and `TN`.
+- **Least Geographically Concentrated:** Community `414027` (Size: 8,608 members) had the lowest concentration index of **0.174**, spanning `TN`, `LA`, and `IN` with reviews distributed broadly across many states. This community's members appear to be highly mobile reviewers — likely frequent travellers or elite users active across multiple regions.
+
+The top-3 business categories reviewed by community members are virtually identical across all large communities: `Restaurants`, `Food`, `Nightlife`. This reflects the dominance of dining and leisure in Yelp's review ecosystem. Geographic concentration, not category diversity, is the primary differentiator between communities.
+
 **Visualization:**
 ![GDS 2 Louvain](../02_Neo4j%20Queries/output/gds_q2_louvain_scatter.png)
 
 
 ### GDS 3: Node Similarity (Jaccard Audience Overlap)
-**Cypher Audience Matrix Algebra:**
+For each city with at least 20 businesses, we computed pairwise Jaccard similarity between businesses in the same category and city, where two businesses share an audience if they have at least 5 common reviewers. The mean intra-category Jaccard similarity per city–category combination serves as a proxy for market saturation. All cities with at least 20 businesses in the dataset are processed; due to Java heap constraints, cities were processed in batches of 5.
+
+**Cypher Audience Matrix:**
 ```cypher
+UNWIND $cities AS target_city
+MATCH (b:Business {city: target_city})-[:IN_CATEGORY]->(c:Category)
+WITH target_city, c.name AS category
+
 MATCH (b1:Business {city: target_city})-[:IN_CATEGORY]->(:Category {name: category})
 OPTIONAL MATCH (b1)<-[:ABOUT]-(:Review)<-[:WROTE]-(u:User)
 WITH target_city, category, b1, collect(DISTINCT id(u)) AS audience1
+WHERE size(audience1) > 0
 
 MATCH (b2:Business {city: target_city})-[:IN_CATEGORY]->(:Category {name: category})
 WHERE id(b1) < id(b2)
 OPTIONAL MATCH (b2)<-[:ABOUT]-(:Review)<-[:WROTE]-(u2:User)
 WITH target_city, category, b1, audience1, b2, collect(DISTINCT id(u2)) AS audience2
-WHERE size(apoc.coll.intersection(audience1, audience2)) >= 5
+WHERE size(audience2) > 0
 
-WITH tofloat(size(apoc.coll.intersection(audience1, audience2))) / size(apoc.coll.union(audience1, audience2)) AS jaccard_score
+WITH target_city, category, size(apoc.coll.intersection(audience1, audience2)) AS common_users, audience1, audience2
+WHERE common_users >= 5
+
+WITH target_city, category,
+     tofloat(common_users) / size(apoc.coll.union(audience1, audience2)) AS jaccard_score,
+     b1.stars AS b1_stars, b2.stars AS b2_stars, b1.review_count AS b1_rev, b2.review_count AS b2_rev
+RETURN target_city, category, jaccard_score, b1_stars, b2_stars, b1_rev, b2_rev
 ```
 
-**Interpretation:**
-Categorical saturated markets dynamically mathematically showcased slightly elevated absolute rating variances compared to fragmented niche categories with distinct audiences. Dense reviewer overlaps practically imply that entering an established hyper-saturated topological market places massive early pressure on the specific establishment to directly contest local "power-reviewers."
-- **Most Saturated (Highest Jaccard):** 
-  1. `Tucson - Shopping Centers`: 0.073 Jaccard (3.75 Stars, 60.25 Reviews)
-  2. `Tampa - Grocery`: 0.058 Jaccard (3.83 Stars, 83.00 Reviews)
-  3. `Tucson - Shopping`: 0.058 Jaccard (3.70 Stars, 57.30 Reviews)
-  4. `Tampa - Sandwiches`: 0.044 Jaccard (3.91 Stars, 99.00 Reviews)
-  5. `Tucson - Juice Bars & Smoothies`: 0.041 Jaccard (3.83 Stars, 194.00 Reviews)
-- **Most Fragmented (Lowest Jaccard):**
-  1. `Nashville - Bakeries`: 0.002 Jaccard (4.13 Stars, 1066.75 Reviews)
-  2. `Nashville - Hotels & Travel`: 0.005 Jaccard (3.08 Stars, 921.00 Reviews)
-  3. `Nashville - Hotels`: 0.006 Jaccard (2.75 Stars, 866.50 Reviews)
-  4. `Philadelphia - Diners`: 0.006 Jaccard (3.63 Stars, 661.50 Reviews)
-  5. `Indianapolis - Tacos`: 0.006 Jaccard (4.42 Stars, 504.33 Reviews)
+**(a) Five Most Saturated and Five Most Fragmented City–Category Combinations:**
+
+Most Saturated (Highest Mean Intra-Category Jaccard), across all 55 qualifying cities:
+1. `Edmonton - Shopping`: Mean Jaccard 0.1835 | Mean Stars 3.00 | Mean Reviews/Business 18
+2. `Edmonton - Fashion`: Mean Jaccard 0.1749 | Mean Stars 3.33 | Mean Reviews/Business 18
+3. `Sherwood Park - Burgers`: Mean Jaccard 0.0867 | Mean Stars 3.50 | Mean Reviews/Business 32
+4. `Sherwood Park - Restaurants`: Mean Jaccard 0.0867 | Mean Stars 3.50 | Mean Reviews/Business 32
+5. `Edmonton - Chinese`: Mean Jaccard 0.0866 | Mean Stars 3.50 | Mean Reviews/Business 39
+
+Most Fragmented (Lowest Mean Intra-Category Jaccard):
+1. `New Orleans - French`: Mean Jaccard 0.0014 | Mean Stars 3.67 | Mean Reviews/Business 2312
+2. `New Orleans - Vegetarian`: Mean Jaccard 0.0024 | Mean Stars 4.00 | Mean Reviews/Business 1060
+3. `Nashville - Bakeries`: Mean Jaccard 0.0028 | Mean Stars 4.13 | Mean Reviews/Business 1067
+4. `Reno - Venues & Event Spaces`: Mean Jaccard 0.0036 | Mean Stars 4.00 | Mean Reviews/Business 1314
+5. `New Orleans - Coffee & Tea`: Mean Jaccard 0.0046 | Mean Stars 4.17 | Mean Reviews/Business 1245
+
+**(b) Comparison of Saturated vs Fragmented Markets (Star Rating Variance and Review Count):**
+
+| Market Type | City–Category | Mean Jaccard | Mean Stars | Std Stars | Mean Reviews/Biz |
+|---|---|---|---|---|---|
+| Most Saturated | Edmonton – Shopping | 0.1835 | 3.00 | 0.43 | 18 |
+| Most Saturated | Edmonton – Fashion | 0.1749 | 3.33 | 0.33 | 18 |
+| Most Saturated | Sherwood Park – Burgers | 0.0867 | 3.50 | 0.25 | 32 |
+| Most Fragmented | New Orleans – French | 0.0014 | 3.67 | 0.17 | 2312 |
+| Most Fragmented | Nashville – Bakeries | 0.0028 | 4.13 | 0.13 | 1067 |
+
+**Discussion:** The saturated markets are dominated by Edmonton, Alberta and its suburb Sherwood Park — smaller Canadian cities that are underrepresented in the Yelp dataset. With few businesses per category and a small pool of local reviewers, each reviewer has evaluated multiple businesses in the same category, producing high Jaccard scores. Edmonton–Shopping achieves a Jaccard of 0.1835 — nearly 10× higher than the most saturated US city combination — but average ratings are low (3.00–3.50) and review counts tiny (18–39 per business). This reveals a genuine market saturation pattern: in low-volume markets where the same reviewers assess all options, a negative experience with one business immediately contextualises all others.
+
+By contrast, New Orleans French restaurants are the most fragmented market (Jaccard 0.0014): 2,312 mean reviews per business, with each restaurant drawing a nearly entirely distinct audience — composed largely of tourists who visit one or two destinations and never overlap with other venues' reviewers. Similarly, New Orleans Coffee & Tea, Vegetarian, and Cocktail Bars all show extremely low overlap despite high review volumes, confirming that tourist-heavy city segments inherently fragment audiences.
+
+**Star rating variance** follows the expected direction: saturated markets (Edmonton Shopping: std 0.43, Edmonton Fashion: std 0.33) show meaningfully higher rating spread than fragmented markets (New Orleans French: std 0.17, Nashville Bakeries: std 0.13). In saturated markets, shared power-reviewers apply consistent internal benchmarks across all businesses in the category, amplifying divergence between winners and losers. In fragmented markets, businesses are rated by independent audiences applying different individual standards, producing tighter convergence toward the mean.
+
+**Implication for market entry:** Entering Edmonton Shopping or Sherwood Park Burgers means immediately being judged against all competitors by the same small reviewer pool — every review matters disproportionately, and reputational damage spreads rapidly. Entering New Orleans French or Nashville Bakeries means competing for a fresh audience with each customer, offering more room to build an independent reputation before comparisons accumulate.
+
 **Visualization:**
 ![GDS 3 Jaccard](../02_Neo4j%20Queries/output/gds_q3_node_similarity.png)
 
 
 ### GDS 4: Betweenness vs Degree Centrality
+Betweenness Centrality was computed on the FRIENDS_WITH graph. To prevent JVM heap exhaustion over the full 40M-edge friendship graph, we projected an isolated sub-graph containing only users with 5 or more reviews. This preserves structural integrity while drastically reducing memory requirements.
+
 **Cypher Algorithm Execution:**
-*(Sub-graph isolation implemented to strictly avoid JVM 45M edge Java space `OutOfMemoryError` failures)*
 ```cypher
 CALL gds.graph.project.cypher(
  'betweennessGraph',
- 'MATCH (u:User)-[w:WROTE]->(:Review) WITH u, count(w) AS rc WHERE rc >= 10 RETURN id(u) AS id',
+ 'MATCH (u:User)-[w:WROTE]->(:Review) WITH u, count(w) AS rc WHERE rc >= 5 RETURN id(u) AS id',
  'MATCH (u1:User)-[:FRIENDS_WITH]-(u2:User) RETURN id(u1) AS source, id(u2) AS target'
 )
 
 CALL gds.betweenness.stream('betweennessGraph') YIELD nodeId, score
 WITH gds.util.asNode(nodeId) AS user, score AS betweenness_score
-RETURN user.id AS uid, betweenness_score, COUNT { (user)-[:FRIENDS_WITH]-() } AS degree
+WITH id(user) AS uid, betweenness_score, COUNT { (user)-[:FRIENDS_WITH]-() } AS degree
+RETURN uid, betweenness_score, degree
+ORDER BY betweenness_score DESC
 ```
 
 **Interpretation:**
-When charting topological influence bounds via the top 20 users conceptually, we discovered a colossal structural overlap. The isolation query returned **`19`** users natively intersecting both Top 20 Betweenness and Top 20 Degree bounds.
-**Bridge User Analysis (High Betweenness, Low Degree):**
-There was exactly **`1`** topological bridge user identified under our explicit geometric threshold constraints:
-- **Bridge Users** averaged `6.00` total reviews stretching across `2.00` distinct cities and `15.00` distinct textual categories algebraically.
-- Conversely, **High-Degree Users** overwhelmingly dominated absolute volumetric thresholds, averaging `32.70` absolute reviews across `6.10` distinct cities and heavily saturating `63.65` separate categories!
-Betweenness thus explicitly reveals users who function computationally as structural informational hubs linking divergent topological sub-networks, despite contributing phenomenally lower raw connection frequencies than brute-force power users.
+Of the top 20 users by betweenness centrality and the top 20 by degree centrality, **19 users** appear in both sets — a substantial overlap indicating that for most power-users, high friendship count co-occurs with high structural bridging.
+
+**Bridge User Analysis (High Betweenness, Low Degree — top-20 betweenness, outside top-20 degree):**
+There was exactly **1 bridge user** identified under these strict thresholds:
+- **Bridge User**: 6.00 mean reviews | 2.00 distinct cities | 15.00 distinct categories
+- **High-Degree Group (top-20 degree)**: 32.70 mean reviews | 6.10 distinct cities | 63.65 distinct categories
+
+The sharp contrast is revealing. High-degree users are prolific, geographically mobile, and category-diverse — classic "power users" in the social graph. The lone bridge user, by contrast, has far fewer reviews but occupies a unique structural position: they connect sub-communities that would otherwise be disconnected. Betweenness thus identifies users who function as information conduits linking disparate social clusters, even without the volume of activity characteristic of brute-force power users. Such users are disproportionately important for information diffusion across the Yelp social graph — a platform intervention (e.g., promotional review request) targeting them could cascade recommendations across otherwise unreachable communities.
+
 **Visualization:**
 ![GDS 4 Betweenness](../02_Neo4j%20Queries/output/gds_q4_betweenness.png)
 
 
 ### GDS 5: Bipartite Link Prediction (Recommendation System)
+We framed restaurant recommendation as bipartite link prediction — predicting whether a user will review a business (i.e., visit it). A chronological 80/20 train/test split was used where each user's most recent review forms the test set. FastRP embeddings were generated in GDS to capture topological user and business representations, then merged with review chronology data from MongoDB.
+
 **Pipeline Algorithm:**
-We engineered a Bipartite Recommender architecture evaluating chronological topological predictions bridging missing nodes conceptually.
 ```cypher
 CALL gds.graph.project.cypher(
  'lpGraph',
  'MATCH (n) WHERE (n:User AND COUNT { (n)-[:WROTE]->() } > 2) OR n:Business RETURN id(n) AS id',
- 'MATCH (u)-[:WROTE]->(:Review)-[:ABOUT]->(b:Business) WHERE COUNT { (u)-[:WROTE]->() } > 2 RETURN id(u) AS source, id(b) AS target UNION MATCH (u1:User)-[:FRIENDS_WITH]-(u2:User) WHERE COUNT { (u1)-[:WROTE]->() } > 2 AND COUNT { (u2)-[:WROTE]->() } > 2 RETURN id(u1) AS source, id(u2) AS target'
+ 'MATCH (u)-[:WROTE]->(:Review)-[:ABOUT]->(b:Business) WHERE COUNT { (u)-[:WROTE]->() } > 2 RETURN id(u) AS source, id(b) AS target
+  UNION
+  MATCH (u1:User)-[:FRIENDS_WITH]-(u2:User) WHERE COUNT { (u1)-[:WROTE]->() } > 2 AND COUNT { (u2)-[:WROTE]->() } > 2 RETURN id(u1) AS source, id(u2) AS target',
+ {validateRelationships: false}
 )
 
 CALL gds.fastRP.mutate('lpGraph', {embeddingDimension: 16, mutateProperty: 'fastrp_embedding'})
 ```
 
+**Features Used:**
+- `cosine_sim`: cosine similarity between user and business FastRP embeddings
+- `user_degree`: user's friend count in the social graph
+- `comm_hash`: Louvain community membership (hash-encoded)
+- `city_hash`: geographic co-location (business city hash-encoded)
+
 **Interpretations & Metrics:**
-- **AUC-ROC Score:** 1.000
-- **Precision@10 Score:** 0.477
-- **Most Predictive Features (Top 5):**
-  1. `cosine_sim` (Topological Embedding Match)
-  2. `user_degree` (Social Connectivity)
-  3. `comm_hash` (Community Membership)
-  4. `city_hash` (Geographic Colocation)
-  5. `label_prior` (Global class distribution)
+- **AUC-ROC Score:** 0.7416 (on chronological test set, 75,663 samples)
+- **Precision@10 Score:** 0.4761
+- **Train / Test split:** 116,601 training samples | 75,663 test samples (chronologically enforced — each user's most recent review is the positive test edge)
+- **Most Predictive Features (ranked by importance):**
+  1. `city_hash` — 41.15% importance (Geographic co-location of business)
+  2. `comm_hash` — 38.24% importance (Louvain community membership of user)
+  3. `user_degree` — 20.61% importance (Social connectivity / friend count)
+  4. `cosine_sim` — 0.00% importance (FastRP embedding cosine similarity)
 
 **Discussion on Social vs Affinity Features:**
-Social graph features (degree, community) play a critical role as "probability anchors"—they determine if a user exists in a high-activity cluster likely to review *any* establishment. However, User-Business Affinity features (cosine similarity of FastRP embeddings) drive the precision needed for personalized recommendations by encoding the multi-dimensional overlap between a specific user's categorical history and a business's structural profile.
+The feature importance ranking reveals a striking and important finding: **FastRP embedding cosine similarity (`cosine_sim`) contributes zero predictive power**, while the two geographic/social graph features (`city_hash` and `comm_hash`) together account for nearly 80% of the model's decisions.
 
-**Recommendation Sampling (Top 3 for 5 Users):**
-1. User `---2PmXbF47D870stH1jqA` -> Recommended: `p21PCK17H3WL56KSr4Ykig`, `VstEcA4Mpr-Z_Z7YxGonjw`, `oVlS3TqJLq6ogSo9tI_U0Q`
-2. User `--WLSCJPoCNQmTmG2yPAcQ` -> Recommended: `VstEcA4Mpr-Z_Z7YxGonjw`, `7k2wRYCOlc2kXPBEMk6zsw`, `yN6jZyG1G1FG_HCZQlJZ1g`
-3. User `--_H9j6ggxvqhh9nPofZwg` -> Recommended: `oVlS3TqJLq6ogSo9tI_U0Q`, `yN6jZyG1G1FG_HCZQlJZ1g`, `p21PCK17H3WL56KSr4Ykig`
-4. User `--_r6E98SNIrGU7weyNxbw` -> Recommended: `7k2wRYCOlc2kXPBEMk6zsw`, `oVlS3TqJLq6ogSo9tI_U0Q`, `VstEcA4Mpr-Z_Z7YxGonjw`
-5. User `--dVKamoZnV2vYwKtWMVVA` -> Recommended: `yN6jZyG1G1FG_HCZQlJZ1g`, `p21PCK17H3WL56KSr4Ykig`, `7k2wRYCOlc2kXPBEMk6zsw`
+This tells us that *where a user is located* (their community's geographic anchor, captured by `comm_hash`) and *where a business is located* (`city_hash`) are overwhelmingly the most predictive signals for whether a user will review that business. Users almost exclusively review businesses in their own city or in cities their community frequents — the social graph, through Louvain communities, encodes strong geographic clustering (as demonstrated in GDS Q2 where the most concentrated communities had 0.87–0.94 geographic concentration indices).
+
+The zero importance of `cosine_sim` is also instructive: with 16-dimensional FastRP embeddings, the topological similarity between a user node and a business node does not meaningfully separate real edges from random negative pairs once geographic and community features are already present in the model. The embedding captures structural proximity in the graph, but this is already largely explained by geographic co-location. A higher-dimensional embedding or one trained with category-level features would likely recover predictive signal from this feature.
+
+`user_degree` (20.6%) reflects that highly connected users produce more positive test edges (they review more businesses), making degree a useful prior on the base rate of review activity for a given user.
+
+**Recommendation Sampling (Top 3 per User, for 5 Sampled Users):**
+1. User `---2PmXbF47D870stH1jqA` → No negative test samples available for this user
+2. User `--WLSCJPoCNQmTmG2yPAcQ` → Recommended: `2TjLk6ep_MgwvtZusozcgA`, `cpjv8YS2DMNIRK6C2MWmIg`, `Rh5lgaOjOeHIUSBpI20llw`
+3. User `--_H9j6ggxvqhh9nPofZwg` → No negative test samples available for this user
+4. User `--_r6E98SNIrGU7weyNxbw` → Recommended: `QkyEr9j7il9lJqseTbPe5w`, `ls4-Q1KYVP7L6H4eMTQx4w`
+5. User `--dVKamoZnV2vYwKtWMVVA` → Recommended: `Ips2CfiWqC_yB9OjHXPoWQ`, `25rnl98sa3IEc343XYCSDA`
+
+Users with empty recommendation lists had no negative (unvisited) test samples allocated to them during the random 50/50 split of negative edges. In a production system, all unvisited businesses for each user would be candidates.
+
 **Visualization:**
 ![GDS 5 ROC Curve](../02_Neo4j%20Queries/output/stage3_roc_curve.png)
 
 ---
 ## 5. Predictive Modeling: Useful Votes Regression
-We constructed a predictive structural pipeline pulling hybrid datasets mathematically from MongoDB (`Review Length`, `Review Stars`, `User Tenure`) coupled with graph architecture embeddings originating explicitly from Neo4j (`Degree`, `Community`).
+We constructed a predictive pipeline pulling hybrid features from MongoDB (review-level and user-level) and Neo4j (graph-derived), targeting the `useful` vote count for each review.
 
-**Modeling Choices:** We employed a `RandomForestRegressor`. Data was carefully stratified perfectly into 4 distinct buckets (`0`, `1-5`, `6-20`, `21+`) to strictly adhere to rubric constraints while addressing minority label density without artificially truncating severe analytical outliers.
+**Feature Set:**
+- **(a) Review-level:** `review_stars` (star rating given), `review_length` (character count of review text)
+- **(b) User-level:** `user_tenure_days` (days since account creation as of 2022-01-01), `user_review_count` (total reviews written by user), `business_stars` (overall star rating of the reviewed business)
+- **(c) Graph-derived:** `user_degree` (friend count from Neo4j — measures social connectivity, a proxy for review visibility within the social network), `user_community` (Louvain community ID from Section GDS 2 — captures geographic/cultural cluster membership, which predicts whether the user belongs to a high-engagement community where reviews receive more votes)
 
-**Skewed Strata Segments Evaluation Matrix:**
-- **Global Constraints:** RMSE: `2.88` | MAE: `1.83` | R2: `0.104`
-- **Bucket 1:** `0 Useful`: RMSE: `2.18` | MAE: `1.79`
-- **Bucket 2:** `1-5 Useful`: RMSE: `1.55` | MAE: `1.16`
-- **Bucket 3:** `6-20 Useful`: RMSE: `6.35` | MAE: `5.40`
-- **Bucket 4:** `21+ Useful`: RMSE: `23.56` | MAE: `23.51`
-*(Note: Visual mathematical separation displays natively that MAE predictably surges exponentially into the 21+ bounds structurally due to massive right-tail variance inherent to viral reviews!)*
+**Justification for Graph Features:**
+- `user_degree`: Users with more friends have a larger immediate social audience for their reviews. Since useful votes often come from social connections seeing the review on their feed, a higher friend count should directly increase the probability of receiving useful votes.
+- `user_community`: Community membership correlates with geographic concentration and review activity levels. Users in tight, active communities (high geo-concentration) are embedded in denser review ecosystems where peer voting is more common.
 
-**Feature Importance Justifications:**
-1. **User Degree (~31% Importance):** Retrieved solely through Neo4j topological traversals. Graph matrices prove definitively that raw social connectivity mathematically directly correlates with timeline visibility algorithmically, driving interaction votes autonomously.
-2. **Review Length (~30% Importance):** Native document string density bounds mathematically. Dense characters natively invoke intellectual trust inherently versus generic textual outliers.
-3. **User Tenure Days (~13% Importance):** Older architectural accounts natively possess historical compounding algorithmic authority inside platform deployments.
+**Modeling Choices:** `RandomForestRegressor` with 100 trees and max depth 10. Data was stratified into 4 buckets (0, 1–5, 6–20, 21+) to ensure rare high-vote reviews appeared in both train and test sets. 80/20 train/test split, stratified by useful bucket. Random Forest was chosen over linear regression because the useful vote distribution is highly non-linear and right-skewed — tree ensembles handle heterogeneous feature scales and non-linear interactions without requiring normalisation.
 
-**Architectural Limitations & Platform Consequences:** 
-Using strict analytical models linearly ranking reviews based heavily on raw textual review length mathematically biases search mechanics directly towards unstructured text dumping rather than objective qualitative content parsing. 
-**Consequence of Implementation:** As a direct sociological consequence, surfacing algorithmic reviews globally utilizing this specific regression matrix would encourage "power-users" to structurally spam infinitely long pseudo-reviews filled with irrelevant descriptors explicitly to game the useful-vote leaderboards for visibility.
+**Global Evaluation (Test Set):**
+- RMSE: 2.88 | MAE: 1.83 | R²: 0.104
+
+**Skew-Segmented Evaluation Matrix:**
+- Bucket `0 Useful`: RMSE 2.18 | MAE 1.79
+- Bucket `1–5 Useful`: RMSE 1.55 | MAE 1.16
+- Bucket `6–20 Useful`: RMSE 6.35 | MAE 5.40
+- Bucket `21+ Useful`: RMSE 23.56 | MAE 23.51
+
+The model performs best for reviews in the 1–5 useful range (RMSE 1.55) and worst for viral reviews (21+ useful, RMSE 23.56). This is expected: the tail of the useful vote distribution is sparse, non-linear, and driven by viral social dynamics that the feature set does not capture.
+
+**Feature Importances (Top 3):**
+1. **User Degree (~31%):** The most predictive single feature, extracted entirely via Neo4j graph traversal. A user's friend count is the strongest predictor because social visibility — seeing a review in one's feed — is the primary mechanism by which useful votes are generated. This is a graph feature that cannot be derived from document-level data alone.
+2. **Review Length (~30%):** Longer reviews signal more effort and perceived expertise, encouraging readers to mark them useful. This aligns with the cohort analysis finding that early Yelp users (who receive the most useful votes) also write the longest reviews — character density is a proxy for informational value.
+3. **User Tenure Days (~13%):** Accounts with longer history have accumulated algorithmic trust and a larger follower base. Older accounts also tend to have written during Yelp's growth phase when active community engagement was higher. A review by a veteran user has a higher baseline probability of being surfaced and voted on.
+
+**Architectural Limitation:**
+The model over-weights review length and user tenure — both of which are gameable. A platform deploying this model to rank and surface reviews would create incentives for users to write artificially long reviews and cultivate friendship networks solely to boost useful-vote scores, degrading review quality over time.
+
+**Consequence of Implementation:**
+If this regression model were used to rank reviews on the Yelp platform, it would systematically suppress high-quality short reviews from newer users while surfacing long verbose reviews from highly-connected veterans — regardless of the actual informational value of the content. This introduces a Matthew effect: reviews that already receive votes (from connected, tenured users) receive more, while insightful reviews from newer voices are buried.
+
 **Visualization:**
 ![Predictive Feature Importances](../03_Predictive%20Modeling/output/stage4_feature_importance.png)
 
@@ -301,8 +408,6 @@ Using strict analytical models linearly ranking reviews based heavily on raw tex
 ## 6. Conclusion
 The comprehensive engineering executed throughout Part 2 of this assignment proves unequivocally that while standalone NoSQL databases securely contain massive datasets, real-world data science demands **hybrid algorithmic architectures**.
 
-MongoDB’s immense procedural `$group` aggregation pipeline cleanly validated temporal trends and massive subset mathematical arrays perfectly, but fundamentally stalled when requested to perform recursive topological intersections natively (such as multi-hop Centrality bounds). Conversely, Neo4j’s Graph Data Science (GDS) plugin brilliantly decoded complex social community algorithms and identified topological influencers instantly, but strictly required external Python bounds to safely segment queries locally and prevent JVM hardware failures. Finally, compiling the resulting statistical vectors natively extracted across both environments empowered the Random Forest Regression Matrix to intelligently parse both text-length attributes and topological degree boundaries simultaneously.
+MongoDB's immense procedural `$group` aggregation pipeline cleanly validated temporal trends and massive subset mathematical arrays perfectly, but fundamentally stalled when requested to perform recursive topological intersections natively (such as multi-hop Centrality bounds). Conversely, Neo4j's Graph Data Science (GDS) plugin brilliantly decoded complex social community algorithms and identified topological influencers instantly, but strictly required external Python bounds to safely segment queries locally and prevent JVM hardware failures. Finally, compiling the resulting statistical vectors natively extracted across both environments empowered the Random Forest Regression Matrix to intelligently parse both text-length attributes and topological degree boundaries simultaneously.
 
 Ultimately, integrating explicit BSON structural indexing with native Cypher topological analytics produces a mathematically robust analytical topology wholly capable of unlocking multi-dimensional business intelligence logic at scale.
-
-

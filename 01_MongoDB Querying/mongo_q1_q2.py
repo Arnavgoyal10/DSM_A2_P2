@@ -190,14 +190,34 @@ class MongoPart2Analytics:
         import matplotlib.pyplot as plt
         import seaborn as sns
         
-        plot_df = pd.concat([top3_inc, top3_dec])
-        plot_df['short_category'] = plot_df['category'].apply(lambda x: ', '.join(x.split(', ')[:2]) if isinstance(x, str) else x)
-        
-        plt.figure(figsize=(10, 6))
-        sns.barplot(x='inc_proportion', y='short_category', data=plot_df, hue='short_category', palette='coolwarm', legend=False)
-        plt.title('Top 3 Upward vs Downward Consistent Trends (Increase Proportion)')
-        plt.xlabel('Proportion of Consecutive Positive (Upward) Months')
+        # Build proper plot: upward categories by inc_proportion, downward by dec_proportion
+        top3_inc_plot = top3_inc.copy()
+        top3_inc_plot['trend'] = 'Upward'
+        top3_inc_plot['consistency'] = top3_inc_plot['inc_proportion']
+
+        top3_dec_plot = top3_dec.copy()
+        top3_dec_plot['trend'] = 'Downward'
+        top3_dec_plot['consistency'] = top3_dec_plot['dec_proportion']
+
+        plot_df = pd.concat([
+            top3_inc_plot[['category', 'trend', 'consistency']],
+            top3_dec_plot[['category', 'trend', 'consistency']]
+        ])
+        # Truncate long category strings for readable y-axis labels
+        plot_df['short_category'] = plot_df['category'].apply(
+            lambda x: (x[:42] + '...') if isinstance(x, str) and len(x) > 44 else x
+        )
+        plot_df = plot_df.sort_values('consistency', ascending=True)
+
+        plt.figure(figsize=(13, 7))
+        palette = {'Upward': '#2ecc71', 'Downward': '#e74c3c'}
+        sns.barplot(x='consistency', y='short_category', data=plot_df,
+                    hue='trend', palette=palette, dodge=False)
+        plt.axvline(x=0.5, color='navy', linestyle='--', linewidth=1.2, alpha=0.7, label='50% baseline')
+        plt.title('Top 3 Most Consistent Upward & Downward Monthly Trends by Category')
+        plt.xlabel('Proportion of Consecutive Month-Pairs in Same Direction')
         plt.ylabel('Category')
+        plt.legend(title='Trend Direction', loc='lower right')
         plt.tight_layout()
         plt.savefig('output/q2_mom_trends.png', dpi=300)
         plt.close()

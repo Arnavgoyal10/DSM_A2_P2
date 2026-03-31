@@ -19,7 +19,7 @@ class GDSAnalyticsPart2:
             MATCH (b:Business)
             WITH b.city AS city, count(b) AS biz_count
             WHERE biz_count >= 20 AND city IS NOT NULL
-            RETURN city ORDER BY biz_count DESC LIMIT 5
+            RETURN city ORDER BY biz_count DESC
             """
             cities = [record['city'] for record in session.run(city_q)]
             logging.info(f"Identified {len(cities)} valid metro centers for saturation analysis.")

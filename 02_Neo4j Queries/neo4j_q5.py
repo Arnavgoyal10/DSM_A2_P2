@@ -94,15 +94,25 @@ class GDSLinkPrediction:
         u_pool = df['uid'].unique()
         b_pool = df['bid'].unique()
         import random
+        # Build lookup dicts so negative samples get real embedding cosine similarity
+        u_emb_dict = dict(zip(user_df['uid'], user_df['u_emb']))
+        b_emb_dict = dict(zip(biz_df['bid'], biz_df['b_emb']))
+        u_degree_dict = dict(zip(user_df['uid'], user_df['user_degree']))
+        u_comm_dict = dict(zip(user_df['uid'], user_df['u_comm']))
+        b_city_dict = dict(zip(biz_df['bid'], biz_df['b_city']))
         neg_samples = []
-        # Create equal number of negative samples
+        # Create equal number of negative samples with real cosine_sim (not random)
         for _ in range(len(df)):
             ru = random.choice(u_pool)
             rb = random.choice(b_pool)
+            cs = cosine_sim(u_emb_dict.get(ru), b_emb_dict.get(rb))
             neg_samples.append({
-                 'uid': ru, 'bid': rb, 'label': 0, 'cosine_sim': random.random(),
-                 'user_degree': df['user_degree'].mean(), 'u_comm': 0, 'b_city': '',
-                 'is_test': random.choice([True, False]) # Randomly test split negatives
+                'uid': ru, 'bid': rb, 'label': 0,
+                'cosine_sim': cs,
+                'user_degree': u_degree_dict.get(ru, df['user_degree'].mean()),
+                'u_comm': u_comm_dict.get(ru, 0),
+                'b_city': b_city_dict.get(rb, ''),
+                'is_test': random.choice([True, False])
             })
             
         df['label'] = 1 # Positive samples
